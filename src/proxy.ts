@@ -2,6 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export default async function proxy(request: NextRequest) {
+    // If the request has an auth code, redirect to the callback handler
+    const code = request.nextUrl.searchParams.get("code");
+    if (
+        code &&
+        !request.nextUrl.pathname.startsWith("/auth/callback")
+    ) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/auth/callback";
+        return NextResponse.redirect(url);
+    }
+
     let supabaseResponse = NextResponse.next({
         request,
     });
@@ -42,6 +53,7 @@ export default async function proxy(request: NextRequest) {
     ) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
+        url.search = "";
         return NextResponse.redirect(url);
     }
 
