@@ -10,10 +10,21 @@ export async function GET(request: Request) {
         const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-            return NextResponse.redirect(`${origin}${next}`);
+            const forwardedHost = request.headers.get("x-forwarded-host");
+            const isLocalEnv = process.env.NODE_ENV === "development";
+
+            if (isLocalEnv) {
+                // In development, use origin directly
+                return NextResponse.redirect(`${origin}${next}`);
+            } else if (forwardedHost) {
+                // In production (Vercel), use the forwarded host
+                return NextResponse.redirect(`https://${forwardedHost}${next}`);
+            } else {
+                return NextResponse.redirect(`${origin}${next}`);
+            }
         }
     }
 
-    // Return the user to an error page or login
+    // Return the user to login with error
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
 }
