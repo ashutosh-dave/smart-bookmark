@@ -2,15 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export default async function proxy(request: NextRequest) {
-    // If the request has an auth code, redirect to the callback handler
+    // If the request has an auth code, let it pass through to the page
+    // The client-side page handles the code exchange
     const code = request.nextUrl.searchParams.get("code");
-    if (
-        code &&
-        !request.nextUrl.pathname.startsWith("/auth/callback")
-    ) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/auth/callback";
-        return NextResponse.redirect(url);
+    if (code) {
+        return NextResponse.next({ request });
     }
 
     let supabaseResponse = NextResponse.next({
